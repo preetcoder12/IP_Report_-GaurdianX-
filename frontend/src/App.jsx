@@ -12,10 +12,9 @@ function App() {
     setError(null);
 
     try {
-      const url = ipInput
-        ? `http://localhost:3000/checkip?ip=${ipInput}`
-        : "http://localhost:3000/checkip";
-
+      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const url = ipInput ? `${baseUrl}/checkip?ip=${ipInput}` : `${baseUrl}/checkip`;
+      
       const res = await fetch(url);
 
       if (!res.ok) {
