@@ -1,0 +1,6 @@
+{
+    "type": "module",
+    "scripts": {
+        "git": "git add . && git commit -m 'updates' && git push"
+    }
+}

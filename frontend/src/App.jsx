@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import './index.css';
+import { useState } from "react";
+import "./index.css";
 
 function App() {
   const [data, setData] = useState(null);
@@ -10,16 +10,21 @@ function App() {
   const checkIp = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const url = ipInput ? `http://localhost:3000/checkip?ip=${ipInput}` : "http://localhost:3000/checkip";
-      
+      const url = ipInput
+        ? `http://localhost:3000/checkip?ip=${ipInput}`
+        : "http://localhost:3000/checkip";
+
       const res = await fetch(url);
+
       if (!res.ok) {
         if (res.status === 429) {
-          throw new Error("Rate limit exceeded. Try again in a few seconds.");
+          throw new Error("Rate limit exceeded. Try again later.");
         }
         throw new Error("Failed to fetch Security Profile DATA.");
       }
+
       const jsonData = await res.json();
       setData(jsonData);
     } catch (err) {
@@ -37,119 +42,138 @@ function App() {
   };
 
   const getBotBadge = (isBot) => {
-    if (isBot) return <span className="badge bot">Bot Detected</span>;
+    if (isBot) return <span className="badge bot">Bot</span>;
     return <span className="badge safe">Human</span>;
   };
 
   return (
     <div className="dashboard-container">
+
       <div className="header">
-        <div className="title-group">
-          <h1>🛡️ GuardianX</h1>
-          <p>Enterprise IP Intelligence & Fraud Detection</p>
-        </div>
+        <h1>🛡 GuardianX</h1>
+        <p>Enterprise IP Intelligence & Fraud Detection</p>
       </div>
 
       <div className="search-bar">
-        <input 
-          type="text" 
-          placeholder="Enter IP Address to scan (e.g. 8.8.8.8) or leave blank to scan yourself" 
+        <input
+          type="text"
+          placeholder="Enter IP (8.8.8.8) or leave blank"
           value={ipInput}
           onChange={(e) => setIpInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && checkIp()}
+          onKeyDown={(e) => e.key === "Enter" && checkIp()}
         />
-        <button className="btn-scan" onClick={checkIp} disabled={loading}>
+        <button onClick={checkIp} disabled={loading}>
           {loading ? "Scanning..." : "Analyze"}
         </button>
       </div>
 
-      {error && <div style={{ color: "var(--accent-red)", padding: "10px", background: "rgba(239,68,68,0.1)", borderRadius: "8px", border: "1px solid rgba(239,68,68,0.3)", textAlign: "center" }}>⚠️ {error}</div>}
+      {error && <div className="error">⚠ {error}</div>}
 
       {(loading || data) && (
-        <div className="bento-grid" style={{ opacity: loading ? 0.5 : 1, transition: "opacity 0.2s ease" }}>
-          
-          {/* Main Identifier Card */}
-          <div className="card span-2" style={{ borderLeft: "4px solid var(--accent-cyan)"}}>
-            <div className="card-header"><span className="card-icon">📍</span> Profile Identification</div>
+        <div className="bento-grid">
+
+          {/* PROFILE */}
+          <div className="card span-2">
+            <div className="card-header">📍 Profile Identification</div>
+
             <div className="card-value">{loading ? "..." : data?.ip}</div>
-            <div className="card-subtext" style={{ marginTop: "4px", display: "flex", alignItems: "center", gap: "10px" }}>
-              {data?.isMe ? "Your Connection" : "Remote Address"} 
+
+            <div className="card-subtext">
+              {data?.isMe ? "Your Connection" : "Remote Address"}
               {data && getBotBadge(data?.botDetection?.isBot)}
             </div>
-            {data && data.botDetection?.isBot && (
-                <div style={{ marginTop: "12px", fontSize: "12px", fontFamily: "monospace", color: "var(--text-muted)", background: "rgba(0,0,0,0.3)", padding: "8px", borderRadius: "6px" }}>
-                  {data.botDetection.userAgent}
-                </div>
+
+            {data?.botDetection?.isBot && (
+              <div className="ua-box">
+                {data.botDetection.userAgent}
+              </div>
             )}
           </div>
 
-          {/* Threat Intelligence BENTO */}
-          <div className="card" style={{ borderLeft: "4px solid var(--accent-purple)", background: "linear-gradient(180deg, var(--bg-card) 0%, rgba(139, 92, 246, 0.05) 100%)" }}>
-            <div className="card-header"><span className="card-icon">🚨</span> Threat Score</div>
-            {loading ? <div className="card-value pulse">...</div> : (
+          {/* THREAT */}
+          <div className="card">
+            <div className="card-header">🚨 Threat Score</div>
+
+            {loading ? (
+              <div className="card-value">...</div>
+            ) : (
               <>
-                <div className="card-value" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  {data?.threatIntelligence?.error ? "N/A" : `${data?.threatIntelligence?.abuseConfidenceScore}%`}
-                  {getThreatBadge(data?.threatIntelligence?.abuseConfidenceScore, data?.threatIntelligence?.error)}
+                <div className="card-value score">
+                  {data?.threatIntelligence?.error
+                    ? "N/A"
+                    : `${data?.threatIntelligence?.abuseConfidenceScore}%`}
+
+                  {getThreatBadge(
+                    data?.threatIntelligence?.abuseConfidenceScore,
+                    data?.threatIntelligence?.error
+                  )}
                 </div>
-                
-                <div style={{ marginTop: "20px" }}>
-                  <div className="row-data">
-                    <span className="row-label">Reports</span>
-                    <span className="row-val">{data?.threatIntelligence?.totalReports ?? 0}</span>
-                  </div>
-                  <div className="row-data">
-                    <span className="row-label">Type</span>
-                    <span className="row-val">{data?.threatIntelligence?.usageType ?? "Unknown"}</span>
-                  </div>
+
+                <div className="row">
+                  <span>Reports</span>
+                  <span>{data?.threatIntelligence?.totalReports ?? 0}</span>
+                </div>
+
+                <div className="row">
+                  <span>Type</span>
+                  <span>
+                    {data?.threatIntelligence?.usageType ?? "Unknown"}
+                  </span>
                 </div>
               </>
             )}
           </div>
 
-          {/* Geolocation BENTO */}
-          <div className="card" style={{ borderLeft: "4px solid var(--accent-green)" }}>
-            <div className="card-header"><span className="card-icon">🌍</span> Geo Location</div>
-            {loading ? <div className="card-value pulse">...</div> : (
+          {/* GEO */}
+          <div className="card">
+            <div className="card-header">🌍 Geo Location</div>
+
+            {loading ? (
+              <div className="card-value">...</div>
+            ) : (
               <>
-                <div className="card-value" style={{ fontSize: "20px" }}>{data?.geolocation?.city || "Unknown City"}</div>
-                <div className="row-data" style={{ marginTop: "16px" }}>
-                  <span className="row-label">Region</span>
-                  <span className="row-val">{data?.geolocation?.region}</span>
+                <div className="card-value city">
+                  {data?.geolocation?.city || "Unknown"}
                 </div>
-                <div className="row-data">
-                  <span className="row-label">Country</span>
-                  <span className="row-val">{data?.geolocation?.country}</span>
+
+                <div className="row">
+                  <span>Region</span>
+                  <span>{data?.geolocation?.region}</span>
                 </div>
-                <div className="row-data">
-                  <span className="row-label">Coordinates</span>
-                  <span className="row-val">{data?.geolocation?.location}</span>
+
+                <div className="row">
+                  <span>Country</span>
+                  <span>{data?.geolocation?.country}</span>
+                </div>
+
+                <div className="row">
+                  <span>Coordinates</span>
+                  <span>{data?.geolocation?.location}</span>
                 </div>
               </>
             )}
           </div>
 
-          {/* Network BENTO */}
-          <div className="card span-2" style={{ borderLeft: "4px solid var(--accent-blue)" }}>
-            <div className="card-header"><span className="card-icon">📡</span> Network & ASN Data</div>
-            {loading ? <div className="card-value pulse">...</div> : (
+          {/* NETWORK */}
+          <div className="card span-2">
+            <div className="card-header">📡 Network & ASN Data</div>
+
+            {loading ? (
+              <div className="card-value">...</div>
+            ) : (
               <>
-                <div className="card-value" style={{ fontSize: "18px" }}>{data?.network?.org}</div>
-                <div className="card-subtext">Internet Service Provider / Corporate Network</div>
-                
-                <div className="network-grid" style={{ marginTop: "20px" }}>
-                  <div>
-                    <div className="row-data">
-                      <span className="row-label">Abuse ISP</span>
-                      <span className="row-val">{data?.threatIntelligence?.isp || "Unknown"}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="row-data">
-                      <span className="row-label">Local Timezone</span>
-                      <span className="row-val">{data?.network?.timezone}</span>
-                    </div>
-                  </div>
+                <div className="card-value">
+                  {data?.network?.org}
+                </div>
+
+                <div className="row">
+                  <span>ISP</span>
+                  <span>{data?.threatIntelligence?.isp || "Unknown"}</span>
+                </div>
+
+                <div className="row">
+                  <span>Timezone</span>
+                  <span>{data?.network?.timezone}</span>
                 </div>
               </>
             )}
